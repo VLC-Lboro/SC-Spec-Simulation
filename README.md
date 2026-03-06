@@ -16,6 +16,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 streamlit run app.py
 or
+cd 'C:\Users\wsvl\OneDrive - Loughborough University\SC-Spec-Simulation-main\SC-Spec-Simulation-main'
 .\run.ps1
 ```
 
