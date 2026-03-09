@@ -49,3 +49,30 @@ def test_capacity_visibility_caps_t1_orders():
 def test_bullwhip_undefined_for_zero_demand_variance():
     result = run_simulation(base_config(demand_distribution_type="deterministic", demand_deterministic_value=10))
     assert result.kpis.bullwhip_ratio is None
+
+
+def test_large_oem_order_is_split_and_not_fifo_deadlocked():
+    cfg = base_config(
+        simulation_horizon=30,
+        demand_distribution_type="deterministic",
+        demand_deterministic_value=105,
+        transport_delay_t1_to_oem=2,
+        transport_delay_t23_to_t1=5,
+        t1_daily_capacity=95,
+        t23_daily_capacity=100,
+        initial_oem_inventory=140,
+        initial_t1_inventory=180,
+        selected_scenario_id=1,
+    )
+    cfg.policy_params = PolicyParams(
+        S_oem=160,
+        S_t1=220,
+        beta_f=1.6,
+        alpha_inv=1.3,
+        oem_inventory_target=160,
+        oem_forecast_horizon=3,
+    )
+
+    result = run_simulation(cfg)
+    # Regression check for prior all-zero shipments deadlock.
+    assert sum(result.daily_metrics.t1_shipments_to_oem) > 0

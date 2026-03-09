@@ -98,6 +98,27 @@ def run_simulation(config: SimulationConfig, seed_offset: int = 0) -> Simulation
         oem_qty = oem_order_qty(ip_oem, config.policy_params)
 
         if oem_qty > 0:
+            # Avoid impossible-to-ship deadlocks under strict FIFO + full-order shipping:
+            # split a large OEM daily replenishment decision into multiple full orders,
+            # each bounded by T1's daily shipping capacity.
+            if config.t1_daily_capacity > 0:
+                remaining = oem_qty
+                while remaining > 0:
+                    chunk = min(remaining, config.t1_daily_capacity)
+                    order_id = state.next_order_id
+                    state.next_order_id += 1
+                    state.oem_orders[order_id] = OEMOrderRecord(order_id=order_id, qty=chunk, day_placed=day)
+                    state.t1_backlog_queue.append(
+                        T1BacklogOrder(order_id=order_id, qty=chunk, day_received_from_oem=day)
+                    )
+                    remaining -= chunk
+            else:
+                order_id = state.next_order_id
+                state.next_order_id += 1
+                state.oem_orders[order_id] = OEMOrderRecord(order_id=order_id, qty=oem_qty, day_placed=day)
+                state.t1_backlog_queue.append(
+                    T1BacklogOrder(order_id=order_id, qty=oem_qty, day_received_from_oem=day)
+                )
             order_id = state.next_order_id
             state.next_order_id += 1
             state.oem_orders[order_id] = OEMOrderRecord(order_id=order_id, qty=oem_qty, day_placed=day)

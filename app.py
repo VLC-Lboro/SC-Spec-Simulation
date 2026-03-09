@@ -112,6 +112,8 @@ st.markdown(
 - T1 inventory visibility adjustment uses `oem_on_hand` (not `IP_oem`) in line with scenario text.
 - Bullwhip ratio is `undefined (None)` when demand variance is zero.
 - Each replication uses `random_seed + i`.
+- If OEM daily order-up-to result exceeds T1 daily shipping capacity, the order is split into
+  multiple same-day FIFO orders (each <= T1 daily capacity) to avoid strict-FIFO deadlock.
 """
 )
 
