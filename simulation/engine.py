@@ -119,6 +119,10 @@ def run_simulation(config: SimulationConfig, seed_offset: int = 0) -> Simulation
                 state.t1_backlog_queue.append(
                     T1BacklogOrder(order_id=order_id, qty=oem_qty, day_received_from_oem=day)
                 )
+            order_id = state.next_order_id
+            state.next_order_id += 1
+            state.oem_orders[order_id] = OEMOrderRecord(order_id=order_id, qty=oem_qty, day_placed=day)
+            state.t1_backlog_queue.append(T1BacklogOrder(order_id=order_id, qty=oem_qty, day_received_from_oem=day))
 
         available_shipping_capacity = config.t1_daily_capacity
         shipped_today = 0
