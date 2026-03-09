@@ -151,3 +151,26 @@ if run:
         for o in first.completed_orders
     ]
     st.dataframe(orders_rows, use_container_width=True)
+
+st.markdown("---")
+st.subheader("Assumptions implemented")
+st.markdown(
+    """
+- Forecast in Scenarios 2/5 uses expected demand and covers **next H days excluding today**.
+- OEM policy remains baseline order-up-to for all scenarios.
+- T1 inventory visibility adjustment uses `oem_on_hand` (not `IP_oem`) in line with scenario text.
+- Bullwhip ratio is `undefined (None)` when demand variance is zero.
+- Each replication uses `random_seed + i`.
+- If OEM daily order-up-to result exceeds T1 daily shipping capacity, the order is split into
+  multiple same-day FIFO orders (each <= T1 daily capacity) to avoid strict-FIFO deadlock.
+"""
+)
+
+st.subheader("Potential gaps / contradictions identified")
+st.markdown(
+    """
+- Scenario text alternates between forecast window notations `t:t+H` and `k>0`; implementation chooses `k=1..H`.
+- Poisson constraints mention `lambda > 0` in one section and `lambda >= 0` in another; implementation enforces `> 0`.
+- 95th percentile definition references “standard inclusion method”; implementation uses inclusive linear interpolation.
+"""
+)
