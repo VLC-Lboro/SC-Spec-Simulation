@@ -40,6 +40,47 @@ with st.sidebar:
 
 run = st.button("Run Simulation", type="primary")
 
+
+def _expected_demand(cfg: SimulationConfig) -> float:
+    if cfg.demand_distribution_type == "poisson":
+        return cfg.demand_lambda
+    if cfg.demand_distribution_type == "normal":
+        return cfg.demand_mean
+    return float(cfg.demand_deterministic_value)
+
+
+def _sanity_messages(cfg: SimulationConfig):
+    msgs = []
+    exp_d = _expected_demand(cfg)
+
+    if exp_d > cfg.t1_daily_capacity:
+        msgs.append(
+            f"Expected demand ({exp_d:.1f}) is above T1 daily shipping capacity ({cfg.t1_daily_capacity}). "
+            "Daily service for all days is structurally impossible."
+        )
+
+    if exp_d > cfg.t23_daily_capacity:
+        msgs.append(
+            f"Expected demand ({exp_d:.1f}) is above T23 daily capacity ({cfg.t23_daily_capacity}). "
+            "Upstream production cannot keep up in steady state."
+        )
+
+    min_t1_start = cfg.t1_daily_capacity * cfg.transport_delay_t23_to_t1
+    if cfg.initial_t1_inventory < min_t1_start:
+        msgs.append(
+            f"Initial T1 inventory ({cfg.initial_t1_inventory}) is below delay coverage "
+            f"({min_t1_start}) for T23->T1 delay={cfg.transport_delay_t23_to_t1}. "
+            "Early no-shipment days are expected because no pipeline exists at day 0."
+        )
+
+    min_oem_start = int(exp_d * cfg.transport_delay_t1_to_oem)
+    if cfg.initial_oem_inventory < min_oem_start:
+        msgs.append(
+            f"Initial OEM inventory ({cfg.initial_oem_inventory}) is below expected delay coverage "
+            f"(~{min_oem_start}) for T1->OEM delay={cfg.transport_delay_t1_to_oem}."
+        )
+    return msgs
+
 if run:
     cfg = SimulationConfig(
         simulation_horizon=int(horizon),
@@ -73,6 +114,14 @@ if run:
 
     st.subheader("KPI Summary (average across replications)")
     st.json(summary)
+
+    st.subheader("Input sanity checks")
+    checks = _sanity_messages(cfg)
+    if checks:
+        for msg in checks:
+            st.warning(msg)
+    else:
+        st.success("No structural feasibility warnings detected for daily flow.")
 
     st.subheader("Daily Time-Series (Replication 1)")
     ts = {

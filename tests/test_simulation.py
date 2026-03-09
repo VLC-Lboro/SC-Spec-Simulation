@@ -76,3 +76,31 @@ def test_large_oem_order_is_split_and_not_fifo_deadlocked():
     result = run_simulation(cfg)
     # Regression check for prior all-zero shipments deadlock.
     assert sum(result.daily_metrics.t1_shipments_to_oem) > 0
+
+
+def test_user_reported_baseline_pattern_has_many_shipping_days_not_two():
+    cfg = SimulationConfig(
+        simulation_horizon=365,
+        replications_per_scenario=1,
+        random_seed=40,
+        demand_distribution_type="poisson",
+        demand_lambda=105,
+        transport_delay_t1_to_oem=2,
+        transport_delay_t23_to_t1=5,
+        t1_daily_capacity=95,
+        t23_daily_capacity=100,
+        initial_oem_inventory=140,
+        initial_t1_inventory=180,
+        selected_scenario_id=1,
+        policy_params=PolicyParams(
+            S_oem=160,
+            S_t1=220,
+            beta_f=1.6,
+            alpha_inv=1.3,
+            oem_inventory_target=160,
+            oem_forecast_horizon=3,
+        ),
+    )
+    result = run_simulation(cfg)
+    ship_days = sum(1 for x in result.daily_metrics.t1_shipments_to_oem if x > 0)
+    assert ship_days > 100
