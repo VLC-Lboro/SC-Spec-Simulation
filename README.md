@@ -13,13 +13,8 @@ T23 aggregate -> T1 manufacturer -> OEM.
 
 ## Run
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+cd "c:\Users\wsvl\OneDrive - Loughborough University\IP-Spec-Sim-Folder\SC-Spec-Simulation-main"
 streamlit run app.py
-or
-cd 'C:\Users\wsvl\OneDrive - Loughborough University\SC-Spec-Simulation-main\SC-Spec-Simulation-main'
-.\run.ps1
 ```
 
 ## Test
